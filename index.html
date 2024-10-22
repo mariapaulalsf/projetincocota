@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio 1 Mês Cocotas</title>
+    <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1, h2 {
+            color: #4c68af;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        #cadastro, #desafio {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4c68af;
+            color: white;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2f288b;
+        }
+
+        #boasVindas {
+            font-size: 24px;
+            color: #333;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        #insercaoDiaria {
+            margin-top: 20px;
+        }
+
+        #insercaoDiaria p {
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Desafio 1 Mês Cocotas</h1>
+    
+    <div id="cadastro">
+        <h2>Faça seu Cadastro</h2>
+        <label for="nomeUsuario">Digite seu nome:</label>
+        <input type="text" id="nomeUsuario" placeholder="Nome"><br>
+        <button onclick="registrarUsuario()">Registrar</button>
+    </div>
+
+    <div id="desafio" style="display:none;">
+        <h2 id="boasVindas"></h2>
+        <p>Objetivos:</p>
+        <ul>
+            <li>Beber 2 litros de água por dia</li>
+            <li>Treinar o abdômen 3x na semana</li>
+            <li>Fazer cardio 5x na semana</li>
+        </ul>
+        
+        <div id="insercaoDiaria">
+            <p>Preencha os dados para o dia <span id="diaAtual"></span>:</p>
+            <label>Beber 2L de água? </label>
+            <input type="checkbox" id="aguaCheckbox"><br>
+
+            <label>Treinou abdômen? </label>
+            <input type="checkbox" id="absCheckbox"><br>
+
+            <label>Treinou cardio? </label>
+            <input type="checkbox" id="cardioCheckbox"><br>
+
+            <button onclick="voltar()">Voltar</button>
+            <button onclick="confirmarDia()">Confirmar</button>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis Globais
+        let nome = "";
+        let aguaMC = 0, absMC = 0, cardMC = 0;
+        let diaAtual = 1;
+        let historico = [];
+
+        // Função para registrar usuário
+        function registrarUsuario() {
+            nome = document.getElementById("nomeUsuario").value;
+
+            if (nome.length > 0) {
+                // Mensagem de boas-vindas
+                document.getElementById("boasVindas").innerText = "Bem-vindo(a), " + nome + "!";
+                document.getElementById("cadastro").style.display = "none";
+                document.getElementById("desafio").style.display = "block";
+                atualizarDia();
+            } else {
+                alert("Por favor, digite um nome válido.");
+            }
+        }
+
+        // Função para atualizar o dia
+        function atualizarDia() {
+            document.getElementById("diaAtual").innerText = diaAtual;
+        }
+
+        // Função para confirmar o progresso do dia
+        function confirmarDia() {
+            let aguaInput = document.getElementById("aguaCheckbox").checked ? 1 : 0;
+            let absInput = document.getElementById("absCheckbox").checked ? 1 : 0;
+            let cardioInput = document.getElementById("cardioCheckbox").checked ? 1 : 0;
+
+            // Atualizando os contadores
+            aguaMC += aguaInput;
+            absMC += absInput;
+            cardMC += cardioInput;
+
+            // Salvando o histórico do dia
+            historico.push({
+                dia: diaAtual,
+                agua: aguaInput,
+                abs: absInput,
+                cardio: cardioInput
+            });
+
+            // Avançar para o próximo dia
+            if (diaAtual < 31) {
+                diaAtual++;
+                atualizarDia();
+                resetarCheckboxes();
+            } else {
+                verificarDesafio();
+            }
+        }
+
+        // Função para voltar (corrigir erro no dia anterior)
+        function voltar() {
+            if (diaAtual > 1) {
+                diaAtual--;
+                let dadosAnteriores = historico.pop();
+
+                // Reverter os contadores
+                aguaMC -= dadosAnteriores.agua;
+                absMC -= dadosAnteriores.abs;
+                cardMC -= dadosAnteriores.cardio;
+
+                atualizarDia();
+            } else {
+                alert("Você já está no primeiro dia.");
+            }
+        }
+
+        // Função para resetar os checkboxes
+        function resetarCheckboxes() {
+            document.getElementById("aguaCheckbox").checked = false;
+            document.getElementById("absCheckbox").checked = false;
+            document.getElementById("cardioCheckbox").checked = false;
+        }
+
+        // Função para verificar se o desafio foi concluído com sucesso
+        function verificarDesafio() {
+            if (aguaMC >= 31 && absMC >= 15 && cardMC >= 24) {
+                alert("Parabéns, " + nome + "! Você completou o desafio com sucesso!");
+            } else {
+                alert("Desafio não concluído. Continue tentando!");
+            }
+        }
+    </script>
+</body>
+</html>
