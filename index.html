@@ -20,7 +20,7 @@
         }
 
         h1, h2 {
-            color: #4c68af;
+            color: #4CAF50;
             text-align: center;
         }
 
@@ -48,7 +48,7 @@
         }
 
         button {
-            background-color: #4c68af;
+            background-color: #4CAF50;
             color: white;
             padding: 10px 15px;
             margin: 10px 0;
@@ -60,7 +60,7 @@
         }
 
         button:hover {
-            background-color: #2f288b;
+            background-color: #45a049;
         }
 
         #boasVindas {
@@ -102,7 +102,7 @@
     <div id="cadastro">
         <h2>Faça seu Cadastro</h2>
         <label for="nomeUsuario">Digite seu nome:</label>
-        <input type="text" id="nomeUsuario" placeholder="Nome"><br>
+        <input type="text" id="nomeUsuario" placeholder="Nome completo"><br>
         <button onclick="registrarUsuario()">Registrar</button>
     </div>
 
@@ -134,15 +134,34 @@
     <script>
         // Variáveis Globais
         let nome = "";
-        let aguaMC = 0, absMC = 0, cardMC = 0;
         let diaAtual = 1;
-        let historico = [];
+        let progresso = {
+            aguaMC: 0,
+            absMC: 0,
+            cardMC: 0,
+            historico: []
+        };
 
         // Função para registrar usuário
         function registrarUsuario() {
-            nome = document.getElementById("nomeUsuario").value;
+            nome = document.getElementById("nomeUsuario").value.trim();
 
             if (nome.length > 0) {
+                // Carregar progresso salvo, se houver
+                let progressoSalvo = localStorage.getItem(nome);
+                if (progressoSalvo) {
+                    progresso = JSON.parse(progressoSalvo);
+                    diaAtual = progresso.historico.length + 1;
+                } else {
+                    progresso = {
+                        aguaMC: 0,
+                        absMC: 0,
+                        cardMC: 0,
+                        historico: []
+                    };
+                    diaAtual = 1;
+                }
+
                 // Mensagem de boas-vindas
                 document.getElementById("boasVindas").innerText = "Bem-vindo(a), " + nome + "!";
                 document.getElementById("cadastro").style.display = "none";
@@ -156,6 +175,16 @@
         // Função para atualizar o dia
         function atualizarDia() {
             document.getElementById("diaAtual").innerText = diaAtual;
+
+            // Atualiza checkboxes com valores salvos, se houver
+            if (diaAtual <= progresso.historico.length) {
+                let diaAnterior = progresso.historico[diaAtual - 1];
+                document.getElementById("aguaCheckbox").checked = diaAnterior.agua === 1;
+                document.getElementById("absCheckbox").checked = diaAnterior.abs === 1;
+                document.getElementById("cardioCheckbox").checked = diaAnterior.cardio === 1;
+            } else {
+                resetarCheckboxes();
+            }
         }
 
         // Função para confirmar o progresso do dia
@@ -165,23 +194,39 @@
             let cardioInput = document.getElementById("cardioCheckbox").checked ? 1 : 0;
 
             // Atualizando os contadores
-            aguaMC += aguaInput;
-            absMC += absInput;
-            cardMC += cardioInput;
+            if (diaAtual > progresso.historico.length) {
+                progresso.aguaMC += aguaInput;
+                progresso.absMC += absInput;
+                progresso.cardMC += cardioInput;
+                progresso.historico.push({
+                    dia: diaAtual,
+                    agua: aguaInput,
+                    abs: absInput,
+                    cardio: cardioInput
+                });
+            } else {
+                // Se o dia já foi preenchido antes, apenas atualize os valores
+                let diaAnterior = progresso.historico[diaAtual - 1];
+                progresso.aguaMC -= diaAnterior.agua;
+                progresso.absMC -= diaAnterior.abs;
+                progresso.cardMC -= diaAnterior.cardio;
 
-            // Salvando o histórico do dia
-            historico.push({
-                dia: diaAtual,
-                agua: aguaInput,
-                abs: absInput,
-                cardio: cardioInput
-            });
+                diaAnterior.agua = aguaInput;
+                diaAnterior.abs = absInput;
+                diaAnterior.cardio = cardioInput;
+
+                progresso.aguaMC += aguaInput;
+                progresso.absMC += absInput;
+                progresso.cardMC += cardioInput;
+            }
+
+            // Salvar no localStorage
+            localStorage.setItem(nome, JSON.stringify(progresso));
 
             // Avançar para o próximo dia
             if (diaAtual < 31) {
                 diaAtual++;
                 atualizarDia();
-                resetarCheckboxes();
             } else {
                 verificarDesafio();
             }
@@ -191,13 +236,6 @@
         function voltar() {
             if (diaAtual > 1) {
                 diaAtual--;
-                let dadosAnteriores = historico.pop();
-
-                // Reverter os contadores
-                aguaMC -= dadosAnteriores.agua;
-                absMC -= dadosAnteriores.abs;
-                cardMC -= dadosAnteriores.cardio;
-
                 atualizarDia();
             } else {
                 alert("Você já está no primeiro dia.");
@@ -213,7 +251,7 @@
 
         // Função para verificar se o desafio foi concluído com sucesso
         function verificarDesafio() {
-            if (aguaMC >= 31 && absMC >= 15 && cardMC >= 24) {
+            if (progresso.aguaMC >= 31 && progresso.absMC >= 15 && progresso.cardMC >= 24) {
                 alert("Parabéns, " + nome + "! Você completou o desafio com sucesso!");
             } else {
                 alert("Desafio não concluído. Continue tentando!");
